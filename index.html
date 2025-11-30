@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KZ GÜLLE Downloader</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Koyu arka plan */
+            font-family: 'Arial', sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Header Alanı (Logo ve Yazı) */
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        .logo-img {
+            height: 80px; /* Logo boyutu */
+            width: auto;
+            margin-right: 20px;
+             /* Logoyu beyazımsı metalik yapmak için filtre */
+            filter: brightness(1.2) contrast(1.1);
+        }
+
+        .brand-name {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            /* Metalik Yazı Efekti */
+            background: linear-gradient(to bottom, #ffffff, #a8a8a8, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Ana İçerik Alanı */
+        .main-content {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background-color: #333;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        input[type="text"]:focus {
+             border-color: #888;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            color: white;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-mp3 {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        }
+        
+        .btn-mp4 {
+            background: linear-gradient(45deg, #00b09b, #96c93d);
+        }
+
+        #status-message {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 1.2em;
+        }
+
+        /* Mobil Uyumluluk */
+        @media (max-width: 600px) {
+            .header-container {
+                flex-direction: column;
+            }
+            .logo-img {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            .brand-name {
+                font-size: 2rem;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            input[type="text"] {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <img src="logo.png" alt="KG Logo" class="logo-img">
+        <div class="brand-name">KZ GÜLLE</div>
+    </div>
+
+    <div class="main-content">
+        <h3>YouTube Linkini Yapıştır</h3>
+        <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
+        
+        <div class="button-group">
+            <button class="btn btn-mp3" onclick="indirmeyiBaslat('mp3')">🎵 MP3 İndir</button>
+            <button class="btn btn-mp4" onclick="indirmeyiBaslat('mp4')">🎬 MP4 İndir</button>
+        </div>
+
+        <div id="status-message"></div>
+    </div>
+
+    <script>
+        function indirmeyiBaslat(tur) {
+            const urlInput = document.getElementById('yt-url').value;
+            const statusDiv = document.getElementById('status-message');
+            
+            if (!urlInput) {
+                statusDiv.style.color = 'red';
+                statusDiv.innerText = "Lütfen önce bir link yapıştırın!";
+                return;
+            }
+
+            statusDiv.style.color = 'yellow';
+            statusDiv.innerText = "İndirme bağlantısı hazırlanıyor, lütfen bekleyin...";
+
+            // Backend'e istek gönder
+            fetch('/indir', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: urlInput, type: tur }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    statusDiv.style.color = 'red';
+                    statusDiv.innerText = "Hata: " + data.error;
+                } else {
+                    statusDiv.style.color = 'green';
+                    statusDiv.innerText = "Hazır! İndirme başlıyor: " + data.title;
+                    // Tarayıcıyı direkt indirme linkine yönlendir
+                    window.location.href = data.redirect_url;
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                statusDiv.style.color = 'red';
+                statusDiv.innerText = "Bir bağlantı hatası oluştu.";
+            });
+        }
+    </script>
+
+</body>
+</html>
